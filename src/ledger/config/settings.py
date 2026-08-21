@@ -142,4 +142,25 @@ def load_settings(
     return settings
 
 
+def load_settings_from_overlay_path(
+    overlay_path: Path | str, cli_overrides: dict[str, Any] | None = None
+) -> Settings:
+    """Load settings using a specific overlay YAML file's directory as
+    ``config_dir`` and its stem as the ``environment`` name.
+
+    This is what every ``--config <path>`` CLI flag (``ledger train``,
+    ``ledger federated run``, ...) resolves to: ``--config
+    configs/model_baseline.yaml`` loads ``configs/base.yaml`` with
+    ``configs/model_baseline.yaml`` layered on top, exactly like passing
+    ``config_dir="configs", environment="model_baseline"`` to
+    :func:`load_settings` directly.
+    """
+    overlay_path = Path(overlay_path)
+    return load_settings(
+        config_dir=overlay_path.parent,
+        environment=overlay_path.stem,
+        cli_overrides=cli_overrides,
+    )
+
+
 __all__ = ["Settings", "load_settings"]

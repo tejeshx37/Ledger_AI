@@ -17,11 +17,12 @@ from ledger.config.models import (
     SplitConfig,
     TrainingConfig,
 )
-from ledger.config.settings import Settings, load_settings
+from ledger.config.settings import Settings, load_settings, load_settings_from_overlay_path
 
 __all__ = [
     "Settings",
     "load_settings",
+    "load_settings_from_overlay_path",
     "PathsConfig",
     "DataConfig",
     "SplitConfig",
