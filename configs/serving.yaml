@@ -1,0 +1,15 @@
+# Overlay: API server (Phase 8).
+
+serving:
+  host: "0.0.0.0"
+  port: 8000
+  rate_limit_per_minute: 120
+  request_timeout_seconds: 30.0
+
+database:
+  pool_size: 5
+  pool_max_overflow: 10
+
+logging:
+  level: "INFO"
+  json_format: true

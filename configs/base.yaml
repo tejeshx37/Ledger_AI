@@ -1,0 +1,103 @@
+# LEDGER base configuration.
+#
+# This file is the first layer in the load order:
+#   base.yaml -> <environment>.yaml -> environment variables -> CLI overrides
+#
+# Every value here has a matching validated field in
+# src/ledger/config/models.py. Do not add keys here without adding the
+# corresponding typed field — Settings has extra="forbid" and will refuse
+# to load an unrecognised key.
+
+paths:
+  project_root: "."
+  data_raw_dir: "data/raw"
+  data_processed_dir: "data/processed"
+  artifacts_dir: "artifacts"
+  runs_dir: "runs"
+  models_dir: "models"
+
+data:
+  dataset_name: "elliptic"
+  min_ring_size: 3
+  unknown_label_value: "unknown"
+  checksum_algorithm: "sha256"
+  split:
+    strategy: "temporal"
+    train_fraction: 0.6
+    val_fraction: 0.15
+    test_fraction: 0.25
+
+features:
+  use_graph_topological: true
+  use_temporal: true
+  use_motif_counts: true
+  rolling_window_steps: 5
+  fan_in_threshold: 6
+  fan_out_threshold: 6
+  scaler: "standard"
+
+model:
+  name: "xgboost_baseline"
+  random_seed: 42
+  hidden_dim: 64
+  num_layers: 2
+  dropout: 0.1
+  fanout_per_layer: [15, 10]
+  time_encoding_dim: 16
+  motif_loss_weight: 0.0
+  xgboost_max_depth: 6
+  xgboost_n_estimators: 300
+
+training:
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  batch_size: 512
+  max_epochs: 50
+  early_stopping_patience: 5
+  alert_threshold: 0.5
+  alert_budget_per_period: null
+
+federated:
+  num_clients: 4
+  clients_per_round_fraction: 1.0
+  num_rounds: 20
+  local_epochs: 1
+  strategy: "fedavg"
+  fedprox_mu: 0.01
+  boundary_exchange_every_n_rounds: 1
+  boundary_hash_key_env_var: "LEDGER_BOUNDARY_HASH_KEY"
+  secure_aggregation: false
+
+privacy:
+  dp_enabled: true
+  target_epsilon: 8.0
+  target_delta: 0.00001
+  gradient_clip_norm: 1.0
+  noise_multiplier: 1.1
+
+evaluation:
+  precision_at_k_values: [50, 100, 500]
+  protected_attribute_columns: []
+  fairness_disparity_tolerance: 0.1
+  evasion_effort_levels: [0.0, 0.25, 0.5, 0.75, 1.0]
+
+serving:
+  host: "0.0.0.0"
+  port: 8000
+  rate_limit_per_minute: 120
+  request_timeout_seconds: 30.0
+
+database:
+  dsn: null
+  pool_size: 5
+  pool_max_overflow: 10
+
+llm:
+  provider: "null"
+  model_name: ""
+  temperature: 0.0
+  max_output_tokens: 512
+
+logging:
+  level: "INFO"
+  json_format: true

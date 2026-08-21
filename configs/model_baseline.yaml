@@ -1,0 +1,11 @@
+# Overlay: XGBoost baseline (Phase 3). Flat features only, no graph structure.
+
+model:
+  name: "xgboost_baseline"
+  xgboost_max_depth: 6
+  xgboost_n_estimators: 300
+
+features:
+  use_graph_topological: false
+  use_temporal: false
+  use_motif_counts: false

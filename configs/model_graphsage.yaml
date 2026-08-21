@@ -1,0 +1,18 @@
+# Overlay: inductive GraphSAGE (Phase 4.1).
+
+model:
+  name: "graphsage"
+  hidden_dim: 64
+  num_layers: 2
+  dropout: 0.1
+  fanout_per_layer: [15, 10]
+
+features:
+  use_graph_topological: true
+  use_temporal: true
+  use_motif_counts: false
+
+training:
+  learning_rate: 0.001
+  batch_size: 512
+  max_epochs: 50

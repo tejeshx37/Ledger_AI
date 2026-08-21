@@ -1,0 +1,7 @@
+# Overlay: data-preparation runs (`ledger data prepare`).
+# Merged onto base.yaml; only keys that differ from base need to appear here.
+
+data:
+  dataset_name: "elliptic"
+  split:
+    strategy: "temporal"
