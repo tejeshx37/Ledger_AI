@@ -1,0 +1,20 @@
+# Overlay: Temporal GAT with time-encoded attention (Phase 4.2) and the
+# motif-aware auxiliary loss (Phase 4.3).
+
+model:
+  name: "tgat"
+  hidden_dim: 64
+  num_layers: 2
+  dropout: 0.1
+  time_encoding_dim: 16
+  motif_loss_weight: 0.3
+
+features:
+  use_graph_topological: true
+  use_temporal: true
+  use_motif_counts: true
+
+training:
+  learning_rate: 0.0005
+  batch_size: 256
+  max_epochs: 80
