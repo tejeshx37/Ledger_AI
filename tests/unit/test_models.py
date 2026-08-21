@@ -129,11 +129,40 @@ def test_get_detector_returns_registered_model() -> None:
     assert isinstance(detector, MODEL_REGISTRY["xgboost_baseline"])
 
 
-def test_get_detector_unimplemented_model_raises_not_implemented() -> None:
-    with pytest.raises(NotImplementedError, match="graphsage"):
+def test_get_detector_xgboost_ignores_graph_context() -> None:
+    # XGBoost has no use for training_config/features_config/graph; passing
+    # them (or not) must not matter.
+    detector = get_detector(ModelConfig(name="xgboost_baseline"), graph=object())
+    assert isinstance(detector, MODEL_REGISTRY["xgboost_baseline"])
+
+
+def test_get_detector_graph_model_without_context_raises_value_error() -> None:
+    with pytest.raises(ValueError, match="training_config"):
         get_detector(ModelConfig(name="graphsage"))
 
 
-def test_get_detector_unimplemented_tgat_raises_not_implemented() -> None:
-    with pytest.raises(NotImplementedError, match="tgat"):
-        get_detector(ModelConfig(name="tgat"))
+def test_get_detector_graph_model_with_context_succeeds(elliptic_graph_fixture) -> None:
+    from ledger.config.models import TrainingConfig
+    from ledger.models.graphsage import GraphSAGEDetector
+
+    detector = get_detector(
+        ModelConfig(name="graphsage"),
+        training_config=TrainingConfig(),
+        features_config=elliptic_graph_fixture.features_config,
+        graph=elliptic_graph_fixture.attributed_graph,
+    )
+    assert isinstance(detector, GraphSAGEDetector)
+    assert isinstance(detector, MODEL_REGISTRY["graphsage"])
+
+
+def test_get_detector_tgat_with_context_succeeds(elliptic_graph_fixture) -> None:
+    from ledger.config.models import TrainingConfig
+    from ledger.models.tgat import TGATDetector
+
+    detector = get_detector(
+        ModelConfig(name="tgat"),
+        training_config=TrainingConfig(),
+        features_config=elliptic_graph_fixture.features_config,
+        graph=elliptic_graph_fixture.attributed_graph,
+    )
+    assert isinstance(detector, TGATDetector)

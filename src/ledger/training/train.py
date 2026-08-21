@@ -19,12 +19,14 @@ from typing import Any
 
 from ledger.config.settings import Settings
 from ledger.data.canonical import CanonicalDataset
+from ledger.data.graph import TemporalGraphBuilder
 from ledger.data.prepare import prepare_dataset
 from ledger.evaluation.curves import save_pr_curve
 from ledger.evaluation.labels import build_binary_target
 from ledger.evaluation.metrics import compute_metrics
 from ledger.features.pipeline import FeaturePipeline
-from ledger.models.registry import get_detector
+from ledger.models.graph_common import attach_node_features
+from ledger.models.registry import GRAPH_MODEL_NAMES, get_detector
 from ledger.utils.manifest import RunManifest
 from ledger.utils.seeding import seed_everything
 
@@ -42,6 +44,7 @@ class TrainResult:
     feature_importance_path: Path
     manifest_path: Path
     test_metrics: dict[str, Any]
+    test_account_ids: list[str]
 
 
 def _labeled_subset(ids: list[str], y_index: set[str]) -> list[str]:
@@ -86,7 +89,18 @@ def train_detector(settings: Settings) -> TrainResult:
     y_train = y_all.loc[X_train.index]
     y_test = y_all.loc[X_test.index]
 
-    detector = get_detector(settings.model)
+    attributed_graph = None
+    if settings.model.name in GRAPH_MODEL_NAMES:
+        full_features = pipeline.transform(canonical).set_index("account_id")
+        full_graph = TemporalGraphBuilder(canonical).build_static_graph()
+        attributed_graph = attach_node_features(full_graph, full_features)
+
+    detector = get_detector(
+        settings.model,
+        training_config=settings.training,
+        features_config=settings.features,
+        graph=attributed_graph,
+    )
     detector.fit(X_train, y_train)
 
     y_score_test = detector.predict_proba(X_test)
@@ -146,6 +160,7 @@ def train_detector(settings: Settings) -> TrainResult:
         feature_importance_path=feature_importance_path,
         manifest_path=manifest_path,
         test_metrics=test_metrics,
+        test_account_ids=list(X_test.index),
     )
 
 

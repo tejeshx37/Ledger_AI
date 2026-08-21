@@ -114,16 +114,33 @@ def test_cli_train_end_to_end(tmp_path: Path, elliptic_raw_dir: Path) -> None:
     assert "roc_auc" in payload["test_metrics"]
 
 
-def test_cli_train_unimplemented_model_exits_nonzero(
-    tmp_path: Path, elliptic_raw_dir: Path
-) -> None:
+def test_cli_train_graphsage_end_to_end(tmp_path: Path, elliptic_raw_dir: Path) -> None:
+    pytest.importorskip("torch_geometric")
     config_dir = tmp_path / "configs"
     overlay = _write_configs(config_dir, tmp_path)
-    overlay.write_text("model:\n  name: graphsage\n")
+    overlay.write_text("""
+model:
+  name: graphsage
+  hidden_dim: 8
+  num_layers: 2
+  fanout_per_layer: [4, 4]
+features:
+  use_graph_topological: true
+  use_temporal: true
+  use_motif_counts: true
+training:
+  learning_rate: 0.01
+  batch_size: 16
+  max_epochs: 3
+  early_stopping_patience: 2
+""")
 
     result = runner.invoke(app, ["train", "--config", str(overlay)])
-    assert result.exit_code == 1
-    assert "ledger train failed" in result.output
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["dataset_name"] == "elliptic"
+    assert Path(payload["model_path"]).exists()
+    assert "roc_auc" in payload["test_metrics"]
 
 
 def test_cli_train_missing_files_exits_nonzero(tmp_path: Path) -> None:

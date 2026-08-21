@@ -19,6 +19,7 @@ from ledger.config.settings import load_settings, load_settings_from_overlay_pat
 from ledger.data.fetch import DatasetChecksumMismatchError, fetch_dataset, format_fetch_instructions
 from ledger.data.prepare import prepare_dataset
 from ledger.data.registry import DATASET_REGISTRY
+from ledger.evaluation.comparison import DEFAULT_MODEL_OVERLAYS, run_model_comparison
 from ledger.training.train import train_detector
 from ledger.utils.logging import configure_logging
 
@@ -174,6 +175,54 @@ def train(config: _ConfigOption = Path("configs/model_baseline.yaml")) -> None:
                 "feature_importance_path": str(result.feature_importance_path),
                 "manifest_path": str(result.manifest_path),
                 "test_metrics": result.test_metrics,
+            },
+            indent=2,
+        )
+    )
+
+
+_ComparisonConfigsOption = Annotated[
+    list[str] | None,
+    typer.Option(
+        "--configs",
+        help="Overlay YAML filenames under --config-dir to compare (repeat the "
+        "flag per model); defaults to the baseline/GraphSAGE/TGAT trio.",
+    ),
+]
+
+
+@app.command("compare")
+def compare(
+    config_dir: _ConfigDirOption = Path("configs"),
+    configs: _ComparisonConfigsOption = None,
+) -> None:
+    """Train baseline/GraphSAGE/TGAT (or --configs) on an identical split,
+    write a ring-participation comparison table plus per-model artifacts to
+    runs/.
+    """
+    overlay_names = configs if configs else list(DEFAULT_MODEL_OVERLAYS)
+    overlay_paths = [config_dir / name for name in overlay_names]
+    try:
+        result = run_model_comparison(overlay_paths)
+    except (
+        FileNotFoundError,
+        DatasetChecksumMismatchError,
+        NotImplementedError,
+        KeyError,
+        ValueError,
+    ) as exc:
+        typer.echo(f"ledger compare failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(
+        json.dumps(
+            {
+                "run_id": result.run_id,
+                "dataset_name": result.dataset_name,
+                "table_path": str(result.table_path),
+                "table_csv_path": str(result.table_csv_path),
+                "manifest_path": str(result.manifest_path),
+                "table": result.table,
             },
             indent=2,
         )
