@@ -26,10 +26,12 @@ def test_config_hash_prints_a_sha256_hex_digest() -> None:
     int(digest, 16)  # raises if not valid hex
 
 
-def test_data_fetch_not_yet_implemented_fails_loudly() -> None:
+def test_data_fetch_reports_missing_files_when_none_placed() -> None:
+    # Phase 2 behavior test: see tests/unit/test_prepare_cli.py for the
+    # full fetch/prepare flow with files actually placed.
     result = runner.invoke(app, ["data", "fetch", "elliptic"])
     assert result.exit_code == 1
-    assert "not implemented yet" in result.output
+    assert "missing" in result.output
 
 
 def test_main_help_does_not_crash() -> None:
