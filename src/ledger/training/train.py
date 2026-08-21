@@ -107,7 +107,7 @@ def train_detector(settings: Settings) -> TrainResult:
     run_manifest = RunManifest.create(
         run_id=run_id,
         config_hash=settings.hash(),
-        dataset_checksums={},
+        dataset_checksums=prepare_result.dataset_checksums,
         seed=settings.model.random_seed,
         repo_root=settings.paths.project_root,
     )

@@ -36,6 +36,7 @@ class PrepareResult:
     split_manifest_path: Path
     split_ids_path: Path
     manifest_path: Path
+    dataset_checksums: dict[str, str]
 
 
 def prepare_dataset(settings: Settings, dataset_name: str | None = None) -> PrepareResult:
@@ -110,6 +111,7 @@ def prepare_dataset(settings: Settings, dataset_name: str | None = None) -> Prep
         split_manifest_path=split_manifest_path,
         split_ids_path=split_ids_path,
         manifest_path=manifest_path,
+        dataset_checksums=dataset_checksums,
     )
 
 
