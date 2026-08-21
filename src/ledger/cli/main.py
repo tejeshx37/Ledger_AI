@@ -15,10 +15,11 @@ from typing import Annotated
 
 import typer
 
-from ledger.config.settings import load_settings
+from ledger.config.settings import load_settings, load_settings_from_overlay_path
 from ledger.data.fetch import DatasetChecksumMismatchError, fetch_dataset, format_fetch_instructions
 from ledger.data.prepare import prepare_dataset
 from ledger.data.registry import DATASET_REGISTRY
+from ledger.training.train import train_detector
 from ledger.utils.logging import configure_logging
 
 app = typer.Typer(
@@ -133,6 +134,46 @@ def data_prepare(
                 "split_manifest_path": str(result.split_manifest_path),
                 "split_ids_path": str(result.split_ids_path),
                 "manifest_path": str(result.manifest_path),
+            },
+            indent=2,
+        )
+    )
+
+
+_ConfigOption = Annotated[
+    Path, typer.Option(help="Overlay YAML under a configs/ directory alongside base.yaml.")
+]
+
+
+@app.command("train")
+def train(config: _ConfigOption = Path("configs/model_baseline.yaml")) -> None:
+    """Fit a detector per `--config` and write model/metrics/curves/manifest to runs/."""
+    settings = load_settings_from_overlay_path(config)
+    configure_logging(settings.logging)
+    try:
+        result = train_detector(settings)
+    except (
+        FileNotFoundError,
+        DatasetChecksumMismatchError,
+        NotImplementedError,
+        KeyError,
+        ValueError,
+    ) as exc:
+        typer.echo(f"ledger train failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(
+        json.dumps(
+            {
+                "run_id": result.run_id,
+                "dataset_name": result.dataset_name,
+                "model_path": str(result.model_path),
+                "feature_pipeline_path": str(result.feature_pipeline_path),
+                "metrics_path": str(result.metrics_path),
+                "pr_curve_path": str(result.pr_curve_path),
+                "feature_importance_path": str(result.feature_importance_path),
+                "manifest_path": str(result.manifest_path),
+                "test_metrics": result.test_metrics,
             },
             indent=2,
         )

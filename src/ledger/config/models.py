@@ -201,6 +201,7 @@ class EvaluationConfig(FrozenModel):
     protected_attribute_columns: list[str] = Field(default_factory=list)
     fairness_disparity_tolerance: float = Field(default=0.1, gt=0.0, lt=1.0)
     evasion_effort_levels: list[float] = Field(default_factory=lambda: [0.0, 0.25, 0.5, 0.75, 1.0])
+    threshold_sweep_steps: int = Field(default=19, ge=2)
 
 
 class ServingConfig(FrozenModel):
