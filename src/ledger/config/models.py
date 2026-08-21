@@ -237,11 +237,14 @@ class LLMConfig(FrozenModel):
     model_name: str = Field(default="")
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
     max_output_tokens: int = Field(default=512, ge=1)
+    prompt_template: str = Field(
+        default="Refine this raw structured alert evidence into a professional, report-ready prose narrative. Strict constraint: Do not invent any names, dates, amounts, accounts, or facts not explicitly listed in the evidence.\n\nEvidence:\n{evidence_json}"
+    )
 
     @field_validator("provider")
     @classmethod
     def _validate_provider(cls, v: str) -> str:
-        allowed = {"null", "anthropic", "openai"}
+        allowed = {"null", "anthropic", "openai", "gemini"}
         if v not in allowed:
             raise ValueError(f"llm.provider must be one of {allowed}, got {v!r}")
         return v

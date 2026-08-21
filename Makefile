@@ -30,7 +30,10 @@ federated:
 	ledger federated run --config configs/federated.yaml
 
 api:
-	uvicorn ledger.api.app:app --host 0.0.0.0 --port 8000 --reload
+	.venv/bin/uvicorn ledger.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+worker:
+	.venv/bin/python -m ledger.api.worker
 
 frontend:
 	cd frontend && npm run dev

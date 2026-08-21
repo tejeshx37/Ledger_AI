@@ -86,12 +86,12 @@ def test_train_detector_reloaded_model_matches_saved_scores(
     assert ((scores >= 0.0) & (scores <= 1.0)).all()
 
 
-def test_train_detector_unsupported_dataset_raises(tmp_path: Path, ibm_aml_raw_dir: Path) -> None:
+def test_train_detector_ibm_aml_supported(tmp_path: Path, ibm_aml_raw_dir: Path) -> None:
     config_dir = tmp_path / "configs"
     overlay = _write_configs(config_dir, tmp_path, dataset_name="ibm_aml")
     settings = load_settings_from_overlay_path(overlay)
-    with pytest.raises(NotImplementedError, match="transaction-level"):
-        train_detector(settings)
+    res = train_detector(settings)
+    assert res.run_id is not None
 
 
 def test_train_detector_missing_raw_files_raises(tmp_path: Path) -> None:

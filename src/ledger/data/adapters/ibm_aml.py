@@ -69,11 +69,18 @@ class IbmAmlAdapter(DatasetAdapter):
             ],
             ignore_index=True,
         ).drop_duplicates(subset="account_id")
+        first_tx_time = pd.concat(
+            [
+                pd.DataFrame({"account_id": src_accounts, "timestamp": pd.to_datetime(df["Timestamp"])}),
+                pd.DataFrame({"account_id": dst_accounts, "timestamp": pd.to_datetime(df["Timestamp"])}),
+            ]
+        ).groupby("account_id")["timestamp"].min()
+
         accounts = pd.DataFrame(
             {
                 "account_id": account_rows["account_id"],
                 "institution_id": account_rows["institution_id"],
-                "opened_at": pd.NaT,
+                "opened_at": account_rows["account_id"].map(first_tx_time),
                 "attributes": "{}",
             }
         ).reset_index(drop=True)
